@@ -1,6 +1,9 @@
-= Vert.x Maven Starter
+= Vert.x Tweet Engine
 
-This project is a template to start your own Vert.x project using Apache Maven.
+This services handles all communications to Twitter:
+* Tweets
+* Direct Messages
+* Likes
 
 == Prerequisites
 

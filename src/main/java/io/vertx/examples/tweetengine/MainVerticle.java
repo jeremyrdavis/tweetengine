@@ -1,4 +1,4 @@
-package io.vertx.starter;
+package io.vertx.examples.tweetengine;
 
 import io.vertx.core.AbstractVerticle;
 

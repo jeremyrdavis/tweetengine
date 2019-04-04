@@ -1,4 +1,4 @@
-package io.vertx.starter;
+package io.vertx.examples.tweetengine;
 
 
 import io.vertx.core.Vertx;
@@ -10,7 +10,6 @@ import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import static org.assertj.core.api.Assertions.*;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
