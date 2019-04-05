@@ -11,16 +11,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.sql.Date;
+import java.time.Instant;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(VertxExtension.class)
-public class TestReplyToTweet {
-
-  private Vertx vertx;
+public class DirectMessageTest {
 
   @Test
-  @DisplayName("Test Reply Functionality")
-  public void testReplyingToATweet(Vertx vertx, VertxTestContext tc) {
+  @DisplayName("Test Sending a direct message to @vertxdemo")
+  public void testSendingADirectMessageToVertxdemo(Vertx vertx, VertxTestContext tc) {
 
     WebClient webClient = WebClient.create(vertx);
     Checkpoint deploymentCheckpoint = tc.checkpoint();
@@ -30,12 +31,12 @@ public class TestReplyToTweet {
 
       deploymentCheckpoint.flag();
 
-      webClient.post(8081, "localhost", "/api/reply")
+      webClient.post(8080, "localhost", "/api/directmessage")
         .as(BodyCodec.string())
         .sendJsonObject(new JsonObject()
-            .put("text", "Hi, there!")
-            .put("id", 1113217015198703616L)
-            .put("screen_name", "jbossdemo"),
+            .put("message", "Test sent using " + TestData.JBOSSDEMO.screen_name + " authentication values from Vert.x Twitter MSA Demo at " + Date.from(Instant.now()).toString())
+            .put("id", TestData.VERTXDEMO.id)
+            .put("screen_name", TestData.VERTXDEMO.screen_name),
           tc.succeeding(resp -> {
             tc.verify(() -> {
               assertThat(resp.statusCode()).isEqualTo(200);
