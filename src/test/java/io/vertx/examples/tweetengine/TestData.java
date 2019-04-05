@@ -1,5 +1,8 @@
 package io.vertx.examples.tweetengine;
 
+import java.time.Instant;
+import java.util.Date;
+
 public enum TestData {
 
   JBOSSDEMO(702198386284433409L, "jbossdemo", 1113217015198703616L),
@@ -15,5 +18,13 @@ public enum TestData {
     this.id = id;
     this.screen_name = screen_name;
     this.reply_to_status_id = reply_to_status_id;
+  }
+
+  public static String generateReply(TestData testData){
+    return new StringBuilder()
+      .append("@")
+      .append(testData.screen_name)
+      .append(" Reply from Reactive Twitter MSA Demo at ")
+      .append(Date.from(Instant.now())).toString();
   }
 }
