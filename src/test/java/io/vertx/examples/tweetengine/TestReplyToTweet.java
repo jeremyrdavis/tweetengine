@@ -5,11 +5,15 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.codec.BodyCodec;
 import io.vertx.junit5.Checkpoint;
+import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.time.Instant;
+import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,6 +23,7 @@ public class TestReplyToTweet {
   private Vertx vertx;
 
   @Test
+  @Timeout(120000)
   @DisplayName("Test Reply Functionality")
   public void testReplyingToATweet(Vertx vertx, VertxTestContext tc) {
 
@@ -30,18 +35,18 @@ public class TestReplyToTweet {
 
       deploymentCheckpoint.flag();
 
-      webClient.post(8081, "localhost", "/api/reply")
+      webClient.post(8080, "localhost", "/api/reply")
         .as(BodyCodec.string())
         .sendJsonObject(new JsonObject()
-            .put("text", "Hi, there!")
-            .put("id", 1113217015198703616L)
-            .put("screen_name", "jbossdemo"),
+            .put("reply_message", "@vertxdemo Reply sent from Vert.x at " + Date.from(Instant.now()))
+            .put("reply_to_status_id", TestData.VERTXDEMO.reply_to_status_id),
           tc.succeeding(resp -> {
             tc.verify(() -> {
               assertThat(resp.statusCode()).isEqualTo(200);
               assertThat(resp.body()).isNotEmpty();
-              assertThat(resp.body()).contains("Success");
+              assertThat(resp.body()).contains("success");
               requestCheckpoint.flag();
+              tc.completeNow();
             });
           }));
     }));

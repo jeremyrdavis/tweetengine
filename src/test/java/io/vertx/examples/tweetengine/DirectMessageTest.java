@@ -41,7 +41,7 @@ public class DirectMessageTest {
             tc.verify(() -> {
               assertThat(resp.statusCode()).isEqualTo(200);
               assertThat(resp.body()).isNotEmpty();
-              assertThat(resp.body()).contains("Success");
+              assertThat(resp.body()).contains("success");
               requestCheckpoint.flag();
             });
           }));
