@@ -10,22 +10,29 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.BodyHandler;
-import twitter4j.*;
 
-import java.util.UUID;
+import java.time.Instant;
+import java.util.Date;
 
+/**
+ *
+ * {
+ *     "tweet": {
+ *         "status_id" : 123456789,
+ *         "reply_message" : "@twitteruser Thanks for the tweet!"
+ *     }
+ * }
+ */
 public class MainVerticle extends AbstractVerticle {
 
   WebClient webClient;
 
-  Twitter twitter;
-
   JsonObject config;
+
   @Override
   public void start(Future<Void> startFuture) {
 
     webClient = WebClient.create(vertx);
-    twitter = TwitterFactory.getSingleton();
 
     Router baseRouter = Router.router(vertx);
     baseRouter.route("/").handler(this::indexHandler);
@@ -49,7 +56,7 @@ public class MainVerticle extends AbstractVerticle {
       });
   }
 
-  private void defaultResultHandler(final AsyncResult result, final RoutingContext routingContext, final JsonObject successMessage){
+  private void defaultResultHandler(final AsyncResult result, final RoutingContext routingContext, final JsonObject successMessage) {
     if (result.succeeded()) {
       HttpServerResponse response = routingContext.response();
       response
@@ -68,29 +75,33 @@ public class MainVerticle extends AbstractVerticle {
 
     System.out.println("replyHandler");
 
-    JsonObject replyJson = routingContext.getBodyAsJson();
+    JsonObject requestJson = routingContext.getBodyAsJson();
 
-    StatusUpdate reply = new StatusUpdate(replyJson.getString("reply_message"));
-    reply.setInReplyToStatusId(replyJson.getLong("reply_to_status_id"));
+    String replyText = new StringBuilder()
+      .append("@")
+      .append(requestJson.getJsonObject("user").getString("screen_name"))
+      .append(" Thanks for the tweet!")
+      .append(" Sent from Reactive Twitter MSA at")
+      .append(Date.from(Instant.now())).toString();
 
-    vertx.executeBlocking((Future<Object> future) -> {
-      try {
-        twitter.updateStatus(reply); //.updateStatus(reply);
-        future.complete();
-      } catch (TwitterException e) {
-        e.printStackTrace();
-      }
-    }, res -> {
-      if (res.succeeded()) {
+    JsonObject message = new JsonObject()
+      .put("reply", new JsonObject()
+        .put(EventBusConstants.PARAMETERS_REPLY_TO_STATUS_ID, requestJson.getString("id"))
+        .put(EventBusConstants.PARAMETERS_REPLY_STATUS, replyText));
+
+    System.out.println("replyHandler: " + Json.encodePrettily(message));
+
+    vertx.<JsonObject>eventBus().send(EventBusConstants.ADDRESS, message, ar -> {
+      if (ar.succeeded()) {
         HttpServerResponse response = routingContext.response();
         response
           .putHeader("Content-Type", "application/json")
-          .end(Json.encodePrettily(new JsonObject().put("outcome", "success")));
+          .end(Json.encodePrettily(new JsonObject().put("outcome", "success").put("reply", replyText)));
       } else {
         HttpServerResponse response = routingContext.response();
         response
           .putHeader("Content-Type", "application/json")
-          .end(new JsonObject().put("error", res.cause().getMessage()).toBuffer());
+          .end(new JsonObject().put("error", ar.cause().getMessage()).toBuffer());
       }
     });
   }
@@ -99,6 +110,7 @@ public class MainVerticle extends AbstractVerticle {
 
     JsonObject directMessageJson = routingContext.getBodyAsJson();
 
+/*
     vertx.executeBlocking((Future<Object> future) -> {
       try {
         twitter.sendDirectMessage(directMessageJson.getLong("id"), directMessageJson.getString("message"));
@@ -110,6 +122,7 @@ public class MainVerticle extends AbstractVerticle {
     }, res -> {
       defaultResultHandler(res, routingContext, new JsonObject().put("outcome", "success"));
     });
+*/
 
   }
 

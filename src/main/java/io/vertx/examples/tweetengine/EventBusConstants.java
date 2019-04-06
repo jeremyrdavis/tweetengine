@@ -8,7 +8,12 @@ public class EventBusConstants {
   public static final String ACTION = "action";
   public static final String ACTIONS_REPLY = "reply";
   public static final String PARAMETERS_REPLY_TO_STATUS_ID = "reply_to_status_id";
+  public static final String PARAMETERS_REPLY_TO_SCREEN_NAME = "screen_name";
+  public static final String RESULT_FAILURE = "failure";
+  public static final String RESULT_FAILURE_MESSAGE = "error_message";
+  public static final String RESULT_SUCCESS = "success";
   public static final String PARAMETERS_REPLY_STATUS = "reply_message";
+  public static final String MESSAGE_KEY = "message";
 
   public enum EventBusErrors {
 

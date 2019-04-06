@@ -31,15 +31,17 @@ public class TestReplyToTweet {
     Checkpoint deploymentCheckpoint = tc.checkpoint();
     Checkpoint requestCheckpoint = tc.checkpoint();
 
+    JsonObject requestJson = new JsonObject()
+      .put("id", TestData.VERTXDEMO.reply_to_status_id)
+      .put("user", new JsonObject("user").put("screen_name", TestData.VERTXDEMO.screen_name));
+
     vertx.deployVerticle(new MainVerticle(), tc.succeeding(id -> {
 
       deploymentCheckpoint.flag();
 
       webClient.post(8080, "localhost", "/api/reply")
         .as(BodyCodec.string())
-        .sendJsonObject(new JsonObject()
-            .put("reply_message", "@vertxdemo Reply sent from Vert.x at " + Date.from(Instant.now()))
-            .put("reply_to_status_id", TestData.VERTXDEMO.reply_to_status_id),
+        .sendJsonObject(requestJson,
           tc.succeeding(resp -> {
             tc.verify(() -> {
               assertThat(resp.statusCode()).isEqualTo(200);
