@@ -13,6 +13,8 @@ import io.vertx.ext.web.handler.BodyHandler;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -24,6 +26,8 @@ import java.util.Date;
  * }
  */
 public class MainVerticle extends AbstractVerticle {
+
+  Map<Integer, JsonObject> processedTweets = new HashMap<>();
 
   WebClient webClient;
 
@@ -40,20 +44,27 @@ public class MainVerticle extends AbstractVerticle {
     Router apiRouter = Router.router(vertx);
     apiRouter.route("/*").handler(BodyHandler.create());
 
-    baseRouter.mountSubRouter("/api", apiRouter);
-    apiRouter.post("/directmessage").handler(this::directMessageHandler);
     apiRouter.post("/reply").handler(this::replyHandler);
 
-    vertx
-      .createHttpServer()
-      .requestHandler(baseRouter::accept)
-      .listen(8080, result -> {
-        if (result.succeeded()) {
-          startFuture.complete();
-        } else {
-          startFuture.fail(result.cause());
-        }
-      });
+    baseRouter.mountSubRouter("/api", apiRouter);
+
+    vertx.deployVerticle(new TwitterVerticle(), ar -> {
+      if (ar.succeeded()) {
+        vertx
+          .createHttpServer()
+          .requestHandler(baseRouter::accept)
+          .listen(8080, result -> {
+            if (result.succeeded()) {
+              startFuture.complete();
+            } else {
+              startFuture.fail(result.cause());
+            }
+          });
+      }else{
+        startFuture.fail(ar.cause());
+      }
+    });
+
   }
 
   private void defaultResultHandler(final AsyncResult result, final RoutingContext routingContext, final JsonObject successMessage) {
@@ -77,22 +88,28 @@ public class MainVerticle extends AbstractVerticle {
 
     JsonObject requestJson = routingContext.getBodyAsJson();
 
+    System.out.println("request payload:\n" + requestJson);
+
     String replyText = new StringBuilder()
       .append("@")
       .append(requestJson.getJsonObject("user").getString("screen_name"))
       .append(" Thanks for the tweet!")
-      .append(" Sent from Reactive Twitter MSA at")
-      .append(Date.from(Instant.now())).toString();
+      .append(" Sent from Reactive Twitter MSA at ")
+      .append(Date.from(Instant.now()).getTime()).toString();
+
+    System.out.println("reply:\n" + replyText);
 
     JsonObject message = new JsonObject()
-      .put("reply", new JsonObject()
-        .put(EventBusConstants.PARAMETERS_REPLY_TO_STATUS_ID, requestJson.getString("id"))
+      .put(EventBusConstants.MESSAGE_KEY, new JsonObject()
+        .put(EventBusConstants.ACTION, EventBusConstants.ACTIONS_REPLY)
+        .put(EventBusConstants.PARAMETERS_REPLY_TO_STATUS_ID, requestJson.getInteger("id"))
         .put(EventBusConstants.PARAMETERS_REPLY_STATUS, replyText));
 
-    System.out.println("replyHandler: " + Json.encodePrettily(message));
+    System.out.println("message:\n" + message);
 
     vertx.<JsonObject>eventBus().send(EventBusConstants.ADDRESS, message, ar -> {
       if (ar.succeeded()) {
+        processedTweets.put(requestJson.getInteger("id"), message);
         HttpServerResponse response = routingContext.response();
         response
           .putHeader("Content-Type", "application/json")

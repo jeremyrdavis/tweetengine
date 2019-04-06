@@ -6,7 +6,7 @@ import java.util.Date;
 public enum TestData {
 
   JBOSSDEMO(702198386284433409L, "jbossdemo", 1113217015198703616L),
-  VERTXDEMO(1113238476600893445L, "vertxdemo", 1113247322274770944L);
+  VERTXDEMO(1113238476600893445L, "vertxdemo", 1113247355720089600L);
 
   public final long id;
 

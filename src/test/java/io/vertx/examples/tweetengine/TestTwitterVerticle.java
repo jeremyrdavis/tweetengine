@@ -1,9 +1,11 @@
 package io.vertx.examples.tweetengine;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.Checkpoint;
+import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,7 +23,7 @@ public class TestTwitterVerticle {
 
 
   @Test
-//  @Timeout(6000)
+  @Timeout(value = 10, timeUnit = TimeUnit.MINUTES)
   @DisplayName("Test Twitter Verticle")
   public void testReplyingToATweet(Vertx vertx, VertxTestContext tc) {
 
@@ -31,21 +34,23 @@ public class TestTwitterVerticle {
       .append("@")
       .append(TestData.VERTXDEMO.screen_name)
       .append(" Thanks for the tweet!")
-      .append(" Sent from Reactive Twitter MSA at")
-      .append(Date.from(Instant.now())).toString();
+      .append(" Sent from Reactive Twitter MSA at ")
+      .append(Date.from(Instant.now()).getTime()).toString();
 
     JsonObject message = new JsonObject()
       .put(EventBusConstants.MESSAGE_KEY, new JsonObject()
         .put(EventBusConstants.ACTION, EventBusConstants.ACTIONS_REPLY)
         .put(EventBusConstants.PARAMETERS_REPLY_TO_STATUS_ID, TestData.VERTXDEMO.reply_to_status_id)
-        .put(EventBusConstants.PARAMETERS_REPLY_STATUS, TestData.VERTXDEMO.screen_name));
+        .put(EventBusConstants.PARAMETERS_REPLY_STATUS, replyText));
 
     System.out.println("testReplyingToATweet: " + Json.encodePrettily(message));
 
     vertx.deployVerticle(new TwitterVerticle(), tc.succeeding(id -> {
       deploymentCheckpoint.flag();
 
-      vertx.<JsonObject>eventBus().send( EventBusConstants.ADDRESS, message, ar -> {
+      DeliveryOptions deliveryOptions = new DeliveryOptions()
+        .setSendTimeout(600000);
+      vertx.<JsonObject>eventBus().send( EventBusConstants.ADDRESS, message, deliveryOptions, ar -> {
         if (ar.succeeded()) {
           messageSentCheckpoint.flag();
           assertThat(ar.result().body()).isNotNull();

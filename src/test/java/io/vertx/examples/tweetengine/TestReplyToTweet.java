@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,7 +24,7 @@ public class TestReplyToTweet {
   private Vertx vertx;
 
   @Test
-  @Timeout(120000)
+  @Timeout(value = 10, timeUnit = TimeUnit.MINUTES)
   @DisplayName("Test Reply Functionality")
   public void testReplyingToATweet(Vertx vertx, VertxTestContext tc) {
 
@@ -33,7 +34,10 @@ public class TestReplyToTweet {
 
     JsonObject requestJson = new JsonObject()
       .put("id", TestData.VERTXDEMO.reply_to_status_id)
-      .put("user", new JsonObject("user").put("screen_name", TestData.VERTXDEMO.screen_name));
+      .put("text", "Hello, @jbossdemo!")
+      .put("user", new JsonObject().put("screen_name", TestData.VERTXDEMO.screen_name))
+      .put("filtered", true)
+      .put("acceptable", true);
 
     vertx.deployVerticle(new MainVerticle(), tc.succeeding(id -> {
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export LAUNCHER="io.vertx.core.Launcher"
-export VERTICLE="MainVerticle"
+export VERTICLE="io.vertx.examples.tweetengine.MainVerticle"
 export CMD="mvn compile"
 export VERTX_CMD="run"
 
