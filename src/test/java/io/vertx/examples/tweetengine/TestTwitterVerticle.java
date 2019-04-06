@@ -35,7 +35,7 @@ public class TestTwitterVerticle {
       .append(TestData.VERTXDEMO.screen_name)
       .append(" Thanks for the tweet!")
       .append(" Sent from Reactive Twitter MSA at ")
-      .append(Date.from(Instant.now()).getTime()).toString();
+      .append(Date.from(Instant.now())).toString();
 
     JsonObject message = new JsonObject()
       .put(EventBusConstants.MESSAGE_KEY, new JsonObject()
