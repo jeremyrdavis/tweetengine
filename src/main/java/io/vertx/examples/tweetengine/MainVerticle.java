@@ -110,6 +110,7 @@ public class MainVerticle extends AbstractVerticle {
     vertx.<JsonObject>eventBus().send(EventBusConstants.ADDRESS, message, ar -> {
       if (ar.succeeded()) {
         processedTweets.put(requestJson.getInteger("id"), message);
+        processedTweets.forEach((k,v) -> System.out.println("key: " + k + "value: " + v));
         HttpServerResponse response = routingContext.response();
         response
           .putHeader("Content-Type", "application/json")
