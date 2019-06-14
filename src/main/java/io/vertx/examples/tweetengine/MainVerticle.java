@@ -48,7 +48,7 @@ public class MainVerticle extends AbstractVerticle {
 
     baseRouter.mountSubRouter("/api", apiRouter);
 
-    vertx.deployVerticle(new TwitterVerticle(), ar -> {
+    vertx.deployVerticle(new TwitterStreamVerticle(), ar -> {
       if (ar.succeeded()) {
         vertx
           .createHttpServer()
