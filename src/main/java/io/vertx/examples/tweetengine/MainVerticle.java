@@ -44,8 +44,6 @@ public class MainVerticle extends AbstractVerticle {
     Router apiRouter = Router.router(vertx);
     apiRouter.route("/*").handler(BodyHandler.create());
 
-    apiRouter.post("/reply").handler(this::replyHandler);
-
     baseRouter.mountSubRouter("/api", apiRouter);
 
     vertx.deployVerticle(new TwitterStreamVerticle(), ar -> {
@@ -81,72 +79,6 @@ public class MainVerticle extends AbstractVerticle {
     }
 
   }
-
-  private void directMessageHandler(RoutingContext routingContext) {
-
-  }
-
-  private void replyHandler(RoutingContext routingContext) {
-
-    System.out.println("replyHandler");
-
-    JsonObject requestJson = routingContext.getBodyAsJson();
-
-    System.out.println("request payload:\n" + requestJson);
-
-    String replyText = new StringBuilder()
-      .append("@")
-      .append(requestJson.getJsonObject("user").getString("screen_name"))
-      .append(" Thanks for the tweet!")
-      .append(" Sent from Reactive Twitter MSA at ")
-      .append(Date.from(Instant.now()).getTime()).toString();
-
-    System.out.println("reply:\n" + replyText);
-
-    JsonObject message = new JsonObject()
-      .put(EventBusConstants.MESSAGE_KEY, new JsonObject()
-        .put(EventBusConstants.ACTION, EventBusConstants.ACTIONS_REPLY)
-        .put(EventBusConstants.PARAMETERS_REPLY_TO_STATUS_ID, requestJson.getInteger("id"))
-        .put(EventBusConstants.PARAMETERS_REPLY_STATUS, replyText));
-
-    System.out.println("message:\n" + message);
-
-    vertx.<JsonObject>eventBus().send(EventBusConstants.ADDRESS, message, ar -> {
-      if (ar.succeeded()) {
-        processedTweets.put(requestJson.getInteger("id"), message);
-        processedTweets.forEach((k,v) -> System.out.println("key: " + k + "value: " + v));
-        HttpServerResponse response = routingContext.response();
-        response
-          .putHeader("Content-Type", "application/json")
-          .end(Json.encodePrettily(new JsonObject().put("outcome", "success").put("reply", replyText)));
-      } else {
-        HttpServerResponse response = routingContext.response();
-        response
-          .putHeader("Content-Type", "application/json")
-          .end(new JsonObject().put("error", ar.cause().getMessage()).toBuffer());
-      }
-    });
-  }
-
-/*
-  private void directMessageHandler(RoutingContext routingContext) {
-
-    JsonObject directMessageJson = routingContext.getBodyAsJson();
-
-    vertx.executeBlocking((Future<Object> future) -> {
-      try {
-        twitter.sendDirectMessage(directMessageJson.getLong("id"), directMessageJson.getString("message"));
-        System.out.println("Sending direct message to " + directMessageJson.getString("screen_name"));
-        future.complete(new JsonObject().put("result", "Success!"));
-      } catch (TwitterException e) {
-        future.fail(e.getMessage());
-      }
-    }, res -> {
-      defaultResultHandler(res, routingContext, new JsonObject().put("outcome", "success"));
-    });
-
-  }
-*/
 
   private void indexHandler(RoutingContext routingContext) {
     HttpServerResponse response = routingContext.response();
