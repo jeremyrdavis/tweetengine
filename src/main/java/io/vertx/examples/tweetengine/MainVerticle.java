@@ -82,6 +82,10 @@ public class MainVerticle extends AbstractVerticle {
 
   }
 
+  private void directMessageHandler(RoutingContext routingContext) {
+
+  }
+
   private void replyHandler(RoutingContext routingContext) {
 
     System.out.println("replyHandler");
@@ -124,11 +128,11 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
+/*
   private void directMessageHandler(RoutingContext routingContext) {
 
     JsonObject directMessageJson = routingContext.getBodyAsJson();
 
-/*
     vertx.executeBlocking((Future<Object> future) -> {
       try {
         twitter.sendDirectMessage(directMessageJson.getLong("id"), directMessageJson.getString("message"));
@@ -140,9 +144,9 @@ public class MainVerticle extends AbstractVerticle {
     }, res -> {
       defaultResultHandler(res, routingContext, new JsonObject().put("outcome", "success"));
     });
-*/
 
   }
+*/
 
   private void indexHandler(RoutingContext routingContext) {
     HttpServerResponse response = routingContext.response();
